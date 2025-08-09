@@ -1,5 +1,7 @@
 # MacroPad Menu & Modes — README
 
+![Adafruit MacroPad with my newly released 3D printed housing](macropad.png)
+
 A ready‑to‑use CircuitPython project for the Adafruit **MacroPad** with:
 
 * A **main menu** (images + encoder to scroll, press to select)
