@@ -27,41 +27,42 @@ Quick reference for your Adafruit MacroPad setup.
 
 Uses **Win** (Start) to search and open apps (File Explorer uses **Win+E**).
 
+```
 | Teams  | Slack      | Outlook           |
 | Word   | PowerPoint | Excel             |
 | Visio  | VS Code    | File Explorer     |
 | Chrome | Brave      | Anaconda Terminal |
-
+```
 ---
 
-## TW (Rotated Screen – Key Grid)
+## TW (Key Grid)
 
-
+```
 | Space | F4 | Space |
 | Alt   | F3 | Alt   |
 | Enter | F2 | H     |
 | Ctrl  | F1 | F6    |
-
+```
 ---
 
 ## SW (macOS – App Launcher)
 
 Uses **Spotlight** (**⌘ Space**) to open apps.
-
+```
 | VS Code      | Terminal   | GitHub Desktop |
 | Word         | PowerPoint | Excel          |
 | Safari       | Brave      | Chrome         |
 | Bambu Studio | Fusion 360 | iMovie         |
-
+```
 ---
 
 ## F360 (macOS – Fusion 360 Shortcuts)
-
+```
 | New Design **⌘N**      | Open **⌘O**         | Save (Version) **⌘S** |
 | Recovery Save **⇧⌘S**  | Cycle Tabs **⌘Tab** | ViewCube **⌥⌘V**      |
 | Browser **⌥⌘B**        | Comments **⌥⌘A**    | Text Commands **⌥⌘C** |
 | Navigation Bar **⌥⌘N** | Data Panel **⌥⌘P**  | Reset Layout **⌥⌘R**  |
-
+```
 ---
 
 ### Notes
