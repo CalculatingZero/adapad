@@ -19,6 +19,47 @@ macropad.pixels.fill((255, 255, 255))
 
 display = macropad.display
 root = displayio.Group()
+
+# --- Splash (boot logo) ---
+def show_splash(path="/images/logo.bmp", seconds=1.5, wait_for_press=False):
+    splash = displayio.Group()
+    f = None
+    try:
+        f = open(path, "rb")
+        bmp = displayio.OnDiskBitmap(f)
+        tile = displayio.TileGrid(
+            bmp, pixel_shader=bmp.pixel_shader,
+            x=max(0, (display.width  - getattr(bmp, "width",  display.width)) // 2),
+            y=max(0, (display.height - getattr(bmp, "height", display.height)) // 2),
+        )
+        splash.append(tile)
+
+        # show splash
+        try:
+            display.root_group = splash  # CP 9.x
+        except AttributeError:
+            display.show(splash)         # CP 8.x
+
+        start = time.monotonic()
+        while True:
+            if wait_for_press:
+                macropad.encoder_switch_debounced.update()
+                if macropad.encoder_switch_debounced.fell:
+                    break
+            if time.monotonic() - start >= seconds:
+                break
+            time.sleep(0.01)
+    finally:
+        if f:
+            try: f.close()
+            except: pass
+
+    # return to main UI
+    try:
+        display.root_group = root
+    except AttributeError:
+        display.show(root)
+
 # CP 9.x+
 try:
     display.root_group = root
@@ -26,6 +67,10 @@ try:
 except AttributeError:
     display.show(root)
 display.auto_refresh = True
+
+# Show your logo for 1.5s (or hold until button press)
+show_splash("/images/logo.bmp", seconds=3)              # timed
+# show_splash("/images/logo.bmp", wait_for_press=True)    # wait for encoder press
 
 DEFAULT_ROT = display.rotation if hasattr(display, "rotation") else 0
 
@@ -115,7 +160,7 @@ def refresh_info(mode_name=None):
 
 def clamp(val, lo, hi):
     return max(lo, min(hi, val))
-
+    
 # -----------------------
 # Full-screen centered overlay for key/app text
 # -----------------------
@@ -161,6 +206,19 @@ def update_flash():
         flash.hidden = True
         _flash_until = 0.0
 
+def flash_hold(text):
+    # Show centered text with no timeout (hide on key release)
+    global _flash_until
+    flash_label.scale = _best_scale_for(text or " ")
+    flash_label.text = text or " "
+    flash.hidden = False
+    _flash_until = 0.0
+
+def flash_off():
+    # Hide hold overlay immediately
+    global _flash_until
+    flash.hidden = True
+    _flash_until = 0.0  
 # -----------------------
 # Utility: typing & combos
 # -----------------------
@@ -172,6 +230,11 @@ def send_combo(*keys):
     kbd.press(*keys)
     time.sleep(0.02)
     kbd.release_all()
+
+def KC(name, fallback):
+    # Use KEYPAD_* if available, otherwise fall back to top-row key
+    return getattr(Keycode, name, getattr(Keycode, fallback))
+    
 
 def type_text(s, per_char_delay=0.0):
     for ch in s:
@@ -189,18 +252,18 @@ def type_text(s, per_char_delay=0.0):
 #  6,7,8,
 #  9,10,11]
 TENKEY = [
-    ("1", lambda: layout.write("1")),
-    ("2", lambda: layout.write("2")),
-    ("3", lambda: layout.write("3")),
-    ("4", lambda: layout.write("4")),
-    ("5", lambda: layout.write("5")),
-    ("6", lambda: layout.write("6")),
-    ("7", lambda: layout.write("7")),
-    ("8", lambda: layout.write("8")),
-    ("9", lambda: layout.write("9")),
-    ("0", lambda: layout.write("0")),
-    (".", lambda: layout.write(".")),
-    ("Enter", lambda: kbd.send(Keycode.ENTER)),
+    ("1",     (KC("KEYPAD_ONE",   "ONE"),)),
+    ("2",     (KC("KEYPAD_TWO",   "TWO"),)),
+    ("3",     (KC("KEYPAD_THREE", "THREE"),)),
+    ("4",     (KC("KEYPAD_FOUR",  "FOUR"),)),
+    ("5",     (KC("KEYPAD_FIVE",  "FIVE"),)),
+    ("6",     (KC("KEYPAD_SIX",   "SIX"),)),
+    ("7",     (KC("KEYPAD_SEVEN", "SEVEN"),)),
+    ("8",     (KC("KEYPAD_EIGHT", "EIGHT"),)),
+    ("9",     (KC("KEYPAD_NINE",  "NINE"),)),
+    ("0",     (KC("KEYPAD_ZERO",  "ZERO"),)),
+    (".",     (KC("KEYPAD_PERIOD","PERIOD"),)),
+    ("Enter", (KC("KEYPAD_ENTER","ENTER"),)),
 ]
 
 # MS (Windows) app open via Start (Win) + typing + Enter
@@ -234,18 +297,18 @@ MS_WIN_APPS = [
 
 # TW: key set (no rotation)
 TW_KEYS = [
-    ("Space", lambda: kbd.send(Keycode.SPACE)),
-    ("F4",    lambda: kbd.send(Keycode.F4)),
-    ("Space", lambda: kbd.send(Keycode.SPACE)),
-    ("Alt",   lambda: kbd.send(Keycode.ALT)),
-    ("F3",    lambda: kbd.send(Keycode.F3)),
-    ("Alt",   lambda: kbd.send(Keycode.ALT)),
-    ("Enter", lambda: kbd.send(Keycode.ENTER)),
-    ("F2",    lambda: kbd.send(Keycode.F2)),
-    ("H",     lambda: kbd.send(Keycode.H)),
-    ("Ctrl",  lambda: kbd.send(Keycode.CONTROL)),
-    ("F1",    lambda: kbd.send(Keycode.F1)),
-    ("F6",    lambda: kbd.send(Keycode.F6)),
+    ("Esc", (Keycode.ESCAPE,)),
+    ("F4",    (Keycode.F4,)),
+    ("Space", (Keycode.SPACE,)),    
+    ("Alt",   (Keycode.ALT,)),
+    ("F3",    (Keycode.F3,)),
+    ("Alt",   (Keycode.ALT,)),
+    ("Enter", (Keycode.ENTER,)),
+    ("F2",    (Keycode.F2,)),
+    ("H",     (Keycode.H,)),
+    ("Ctrl",  (Keycode.CONTROL,)),
+    ("F1",    (Keycode.F1,)),
+    ("F6",    (Keycode.F6,)),
 ]
 
 # SW (macOS) apps via Spotlight (Cmd+Space)
@@ -310,15 +373,31 @@ def exit_mode():
     refresh_info(None)
     show_image(MENU[current_index][1])
 
-def run_action(mode_name, key_index):
+def run_action(mode_name, key_index, is_press):
     mapping = MODE_MAP.get(mode_name)
     if not mapping or not (0 <= key_index < len(mapping)):
         return
-    label_text, fn = mapping[key_index]
-    # Centered overlay showing ONLY the pressed key/shortcut/app
-    flash_centered(label_text)
-    # Execute
-    fn()
+
+    label_text, payload = mapping[key_index]
+
+    # HOLDABLE entry: payload is a tuple/list of Keycodes
+    if isinstance(payload, (tuple, list)):
+        if is_press:
+            flash_hold(label_text)          # show while held
+            kbd.press(*payload)
+        else:
+            kbd.release(*payload)
+            flash_off()
+        return
+
+    # TAP entry: payload is a callable macro (do on press only)
+    if callable(payload):
+        if is_press:
+            # brief overlay for tap macros; auto-hide via timer
+            flash_centered(label_text, seconds=0.9)
+            payload()
+        return
+    
 
 # -----------------------
 # Main loop: Menu & Modes
@@ -368,9 +447,12 @@ while True:
 
     # ----- Key events -----
     event = macropad.keys.events.get()
-    if event:
-        if event.pressed and in_mode is not None:
-            run_action(in_mode, event.key_number)
+    if event and in_mode is not None:
+        if event.pressed:
+            run_action(in_mode, event.key_number, True)
+        elif event.released:
+            run_action(in_mode, event.key_number, False)
+
 
     # Hide transient footer message & overlay timeout
     clear_message()
