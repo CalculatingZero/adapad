@@ -246,11 +246,7 @@ def type_text(s, per_char_delay=0.0):
 # Mode mappings
 # -----------------------
 
-# 10Key: indices 0..11 laid out as:
-# [0,1,2,
-#  3,4,5,
-#  6,7,8,
-#  9,10,11]
+# 10Key
 TENKEY = [
     ("7",     (KC("KEYPAD_SEVEN", "SEVEN"),)),
     ("8",     (KC("KEYPAD_EIGHT", "EIGHT"),)),
